@@ -928,9 +928,9 @@
           icon.classList.add('in');
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.1 } // fires when the grid itself (not just the section heading) is 10 % visible
     );
-    skillObs.observe(document.getElementById('skills'));
+    skillObs.observe(skillGrid); // watch the grid, not the whole section
   }
 
   // ── nav shadow on scroll ──
