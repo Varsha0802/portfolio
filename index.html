@@ -327,15 +327,15 @@
       object-fit: contain;
       mix-blend-mode: multiply;
     }
-    /* scroll-in: logos move into view */
+    /* scroll-in: logos slide from alternating left / right to centre */
     .skill-icon.r {
       opacity: 0;
-      transform: translateY(24px) scale(0.92);
+      /* initial transform injected via JS (alternating ±60 px) */
       transition: opacity .5s ease, transform .5s ease, box-shadow .3s, border-color .25s;
     }
     .skill-icon.r.in {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      /* inline transform cleared by JS so icon rests at natural position */
     }
 
     /* ─────────────── EXPERIENCE ─────────────── */
@@ -495,17 +495,17 @@
     }
 
     /* ─────────────── HERO ENTRY ANIMATIONS ─────────────── */
+    /* use transitions (not animations) so they don't replay on scroll */
     .hero-inner > * {
-      opacity: 0; transform: translateY(28px);
+      opacity: 0; transform: translateY(26px);
+      transition: opacity .55s ease, transform .55s ease;
     }
-    .hero-inner.loaded .profile-photo-wrap { animation: heroIn .6s ease .05s forwards; }
-    .hero-inner.loaded .hero-badge  { animation: heroIn .6s ease .25s forwards; }
-    .hero-inner.loaded .typewriter-wrap { animation: heroIn .6s ease .35s forwards; }
-    .hero-inner.loaded .hero-title  { animation: heroIn .6s ease .55s forwards; }
-    .hero-inner.loaded .hero-nav    { animation: heroIn .6s ease .75s forwards; }
-    @keyframes heroIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .hero-inner.loaded > *             { opacity: 1; transform: translateY(0); }
+    .hero-inner.loaded .profile-photo-wrap { transition-delay: .05s; }
+    .hero-inner.loaded .hero-badge         { transition-delay: .2s;  }
+    .hero-inner.loaded .typewriter-wrap    { transition-delay: .32s; }
+    .hero-inner.loaded .hero-title         { transition-delay: .44s; }
+    .hero-inner.loaded .hero-nav           { transition-delay: .58s; }
 
     /* ─────────────── REVEAL ANIMATION ─────────────── */
     .r {
@@ -910,14 +910,23 @@
     if (!el.classList.contains('skill-icon')) obs.observe(el);
   });
 
-  // ── skills: logos move in on scroll with stagger ──
+  // ── skills: slide from alternating left / right, staggered ──
   const skillGrid = document.getElementById('skill-grid');
   if (skillGrid) {
     const icons = skillGrid.querySelectorAll('.skill-icon.r');
-    icons.forEach((icon, i) => { icon.style.transitionDelay = `${i * 0.04}s`; });
+    icons.forEach((icon, i) => {
+      const fromLeft = i % 2 === 0;
+      icon.style.transform = fromLeft
+        ? 'translateX(-60px) scale(0.88)'
+        : 'translateX(60px) scale(0.88)';
+      icon.style.transitionDelay = `${Math.floor(i / 2) * 0.05}s`;
+    });
     const skillObs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) icons.forEach(icon => icon.classList.add('in'));
+        if (entry.isIntersecting) icons.forEach(icon => {
+          icon.style.transform = ''; // clear inline → slide to centre
+          icon.classList.add('in');
+        });
       },
       { threshold: 0.15 }
     );
