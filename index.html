@@ -923,14 +923,30 @@
     });
     const skillObs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) icons.forEach(icon => {
-          icon.style.transform = ''; // clear inline → slide to centre
-          icon.classList.add('in');
-        });
+        if (entry.isIntersecting) {
+          // slide in from sides
+          icons.forEach(icon => {
+            icon.style.transform = '';   // clear → animate to natural position
+            icon.classList.add('in');
+          });
+        } else {
+          // off-screen: snap back instantly so the animation replays next time
+          icons.forEach((icon, i) => {
+            icon.style.transition = 'none';          // kill transition temporarily
+            icon.classList.remove('in');             // opacity → 0
+            icon.style.transform = i % 2 === 0      // restore off-screen position
+              ? 'translateX(-60px) scale(0.88)'
+              : 'translateX(60px) scale(0.88)';
+            // re-enable transition after the snap has been painted
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              icon.style.transition = '';
+            }));
+          });
+        }
       },
-      { threshold: 0.1 } // fires when the grid itself (not just the section heading) is 10 % visible
+      { threshold: 0.1 }
     );
-    skillObs.observe(skillGrid); // watch the grid, not the whole section
+    skillObs.observe(skillGrid);
   }
 
   // ── nav shadow on scroll ──
